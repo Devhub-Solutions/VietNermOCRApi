@@ -2,7 +2,6 @@ fastapi
 uvicorn
 jinja2
 python-multipart
-sqlite3
 pydantic
 huggingface_hub
 requests

@@ -9,4 +9,5 @@ services:
     environment:
       - DB_PATH=/app/ocr_app.db
       - PYTHONUNBUFFERED=1
+      - PIP_NO_PROXY=*
     restart: always
