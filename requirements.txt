@@ -9,4 +9,3 @@ httpx
 vncv
 vietnerm
 opencv-python-headless
-pytesseract
