@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VNCV · API Docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:        #09090b;
+  --surface:   #111113;
+  --surface2:  #18181b;
+  --surface3:  #232326;
+  --border:    #2a2a2f;
+  --lime:      #a3e635;
+  --lime-dim:  #6ea818;
+  --lime-glow: rgba(163,230,53,.18);
+  --lime-soft: rgba(163,230,53,.07);
+  --text:      #e4e4e7;
+  --muted:     #71717a;
+  --danger:    #f87171;
+  --blue:      #60a5fa;
+  --orange:    #fb923c;
+  --purple:    #c084fc;
+  --green:     #4ade80;
+  --radius:    10px;
+  --font-mono: 'Space Mono', monospace;
+  --font-body: 'DM Sans', sans-serif;
+}
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--font-body); font-size: 15px;
+  line-height: 1.6; min-height: 100vh;
+  display: flex; flex-direction: column;
+}
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+/* ── Header ── */
+header {
+  position: sticky; top: 0; z-index: 100;
+  height: 56px; background: rgba(9,9,11,.88);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 24px; gap: 16px;
+}
+.brand {
+  font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+  letter-spacing: .06em; color: var(--lime); text-decoration: none;
+  display: flex; align-items: center; gap: 8px;
+}
+.brand-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--lime); box-shadow: 0 0 8px var(--lime);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:.5;transform:scale(.8);} }
+.header-spacer { flex: 1; }
+.nav-link {
+  font-size: 13px; color: var(--muted); text-decoration: none;
+  padding: 4px 10px; border-radius: 6px; transition: color .2s, background .2s;
+}
+.nav-link:hover { color: var(--text); background: var(--surface2); }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 16px; border-radius: var(--radius);
+  font-family: var(--font-body); font-size: 13px; font-weight: 500;
+  cursor: pointer; border: none; transition: all .2s; text-decoration: none;
+}
+.btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+.btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+.btn-lime { background: var(--lime); color: #09090b; }
+.btn-lime:hover { background: #b7f542; box-shadow: 0 0 16px var(--lime-glow); }
+
+/* ── Layout ── */
+.layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  max-width: 1200px; width: 100%;
+  margin: 0 auto; padding: 32px 24px;
+  gap: 40px; flex: 1;
+}
+
+/* ── Sidebar nav ── */
+.sidenav {
+  position: sticky; top: 80px;
+  height: fit-content;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.sidenav-group { margin-bottom: 20px; }
+.sidenav-label {
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); padding: 4px 10px; margin-bottom: 4px;
+}
+.sidenav a {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; border-radius: 7px;
+  font-size: 13px; color: var(--muted);
+  text-decoration: none; transition: all .15s;
+  border: 1px solid transparent;
+}
+.sidenav a:hover { color: var(--text); background: var(--surface2); }
+.sidenav a.active { color: var(--lime); background: var(--lime-soft); border-color: rgba(163,230,53,.2); }
+.sidenav a .method {
+  font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+  padding: 1px 5px; border-radius: 3px; letter-spacing: .05em;
+}
+.method-get    { background: rgba(96,165,250,.15); color: var(--blue); }
+.method-post   { background: rgba(74,222,128,.15); color: var(--green); }
+.method-patch  { background: rgba(251,146,60,.15); color: var(--orange); }
+.method-delete { background: rgba(248,113,113,.15); color: var(--danger); }
+.method-ws     { background: rgba(192,132,252,.15); color: var(--purple); }
+
+/* ── Content ── */
+.content { display: flex; flex-direction: column; gap: 48px; min-width: 0; }
+
+/* ── Section ── */
+.section { scroll-margin-top: 80px; }
+.section-title {
+  font-family: var(--font-mono); font-size: 20px; font-weight: 700;
+  color: var(--text); margin-bottom: 6px;
+  display: flex; align-items: center; gap: 12px;
+}
+.section-subtitle {
+  font-size: 14px; color: var(--muted); margin-bottom: 24px;
+  padding-bottom: 16px; border-bottom: 1px solid var(--border);
+}
+
+/* ── Endpoint card ── */
+.endpoint {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+  margin-bottom: 20px;
+  transition: border-color .2s;
+}
+.endpoint:hover { border-color: rgba(163,230,53,.2); }
+.endpoint-header {
+  padding: 16px 20px;
+  display: flex; align-items: center; gap: 12px;
+  cursor: pointer; user-select: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color .2s;
+}
+.endpoint.open .endpoint-header { border-bottom-color: var(--border); }
+.endpoint-method {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  padding: 4px 10px; border-radius: 5px; letter-spacing: .06em;
+  white-space: nowrap;
+}
+.endpoint-path {
+  font-family: var(--font-mono); font-size: 14px; color: var(--text); flex: 1;
+}
+.endpoint-path .path-param { color: var(--orange); }
+.endpoint-desc { font-size: 13px; color: var(--muted); margin-right: 8px; }
+.chevron {
+  color: var(--muted); font-size: 12px;
+  transition: transform .2s;
+}
+.endpoint.open .chevron { transform: rotate(180deg); }
+.endpoint-body { display: none; padding: 20px; flex-direction: column; gap: 20px; }
+.endpoint.open .endpoint-body { display: flex; }
+
+/* ── Params table ── */
+.params-title {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
+}
+.params-table { width: 100%; border-collapse: collapse; }
+.params-table th {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--muted);
+  text-align: left; padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.params-table td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,.03); vertical-align: top; }
+.params-table tr:last-child td { border-bottom: none; }
+.param-name { font-family: var(--font-mono); font-size: 12px; color: var(--lime); }
+.param-type { font-family: var(--font-mono); font-size: 11px; color: var(--orange); }
+.param-required {
+  font-family: var(--font-mono); font-size: 10px;
+  background: rgba(248,113,113,.12); color: var(--danger);
+  padding: 1px 6px; border-radius: 3px;
+}
+.param-optional {
+  font-family: var(--font-mono); font-size: 10px;
+  background: var(--surface3); color: var(--muted);
+  padding: 1px 6px; border-radius: 3px;
+}
+.param-desc { font-size: 13px; color: var(--text); }
+.param-default { font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+/* ── Code block ── */
+.code-wrap { position: relative; border-radius: 10px; overflow: hidden; }
+.code-lang {
+  position: absolute; top: 10px; right: 48px;
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--muted); letter-spacing: .08em; text-transform: uppercase;
+}
+.copy-btn {
+  position: absolute; top: 8px; right: 10px;
+  background: var(--surface3); border: 1px solid var(--border);
+  color: var(--muted); font-size: 11px; padding: 3px 8px;
+  border-radius: 5px; cursor: pointer; font-family: var(--font-body);
+  transition: all .15s;
+}
+.copy-btn:hover { color: var(--lime); border-color: var(--lime-dim); }
+pre {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px 20px;
+  font-family: var(--font-mono); font-size: 12px; line-height: 1.8;
+  overflow-x: auto; color: var(--text);
+  white-space: pre;
+}
+/* Syntax highlight helpers */
+.kw  { color: var(--purple); }
+.str { color: var(--lime); }
+.num { color: var(--orange); }
+.key { color: var(--blue); }
+.cmt { color: var(--muted); font-style: italic; }
+.val { color: var(--green); }
+.url { color: var(--lime); text-decoration: underline; text-underline-offset: 3px; }
+
+/* ── Response example ── */
+.res-label {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
+  display: flex; align-items: center; gap: 8px;
+}
+.status-200 { color: var(--green); }
+.status-500 { color: var(--danger); }
+.status-503 { color: var(--orange); }
+
+/* ── Info box ── */
+.info-box {
+  background: var(--lime-soft); border: 1px solid rgba(163,230,53,.2);
+  border-radius: 10px; padding: 14px 16px;
+  display: flex; gap: 12px; align-items: flex-start;
+  font-size: 13px;
+}
+.info-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+.warn-box {
+  background: rgba(251,146,60,.07); border: 1px solid rgba(251,146,60,.25);
+  border-radius: 10px; padding: 14px 16px;
+  display: flex; gap: 12px; align-items: flex-start;
+  font-size: 13px;
+}
+
+/* ── DocType table ── */
+.dt-table { width: 100%; border-collapse: collapse; }
+.dt-table th {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--muted);
+  text-align: left; padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.dt-table td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,.03); font-size: 13px; }
+.dt-table tr:last-child td { border-bottom: none; }
+.dt-key {
+  font-family: var(--font-mono); font-size: 12px;
+  background: var(--surface3); color: var(--lime);
+  padding: 3px 8px; border-radius: 4px;
+  border: 1px solid rgba(163,230,53,.2);
+}
+
+/* ── WS flow ── */
+.ws-flow { display: flex; flex-direction: column; gap: 8px; }
+.ws-msg {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 12px 14px; border-radius: 9px;
+  border: 1px solid var(--border); background: var(--surface2);
+}
+.ws-dir {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  padding: 2px 7px; border-radius: 4px; white-space: nowrap; margin-top: 2px;
+}
+.ws-dir.c2s { background: rgba(96,165,250,.15); color: var(--blue); }
+.ws-dir.s2c { background: rgba(163,230,53,.15); color: var(--lime); }
+.ws-msg-body { flex: 1; font-size: 13px; }
+.ws-type { font-weight: 600; margin-bottom: 2px; }
+.ws-payload { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+
+/* ── Try it ── */
+.try-it {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px;
+}
+.try-title {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
+}
+.try-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.try-input {
+  flex: 1; min-width: 200px;
+  padding: 9px 14px; border-radius: var(--radius);
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); font-family: var(--font-mono); font-size: 13px;
+  outline: none; transition: border-color .2s;
+}
+.try-input:focus { border-color: var(--lime); box-shadow: 0 0 0 3px var(--lime-glow); }
+select.try-input { cursor: pointer; }
+.try-output {
+  margin-top: 12px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px 16px; font-family: var(--font-mono); font-size: 12px;
+  line-height: 1.7; color: var(--text);
+  max-height: 280px; overflow-y: auto;
+  display: none; white-space: pre-wrap; word-break: break-word;
+}
+.try-output.visible { display: block; }
+.try-file {
+  display: none;
+}
+
+/* ── Badge ── */
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 99px;
+  font-family: var(--font-mono); font-size: 10px;
+  background: var(--lime-glow); color: var(--lime);
+  border: 1px solid rgba(163,230,53,.3);
+}
+
+/* ── Footer ── */
+footer {
+  padding: 20px 24px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 16px;
+  font-size: 12px; color: var(--muted);
+}
+footer a { color: var(--muted); text-decoration: none; }
+footer a:hover { color: var(--lime); }
+
+/* ── Animations ── */
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+.fade-up   { animation: fadeUp .35s ease both; }
+.fade-up-2 { animation: fadeUp .35s ease .06s both; }
+.fade-up-3 { animation: fadeUp .35s ease .12s both; }
+
+/* ── Responsive ── */
+@media (max-width: 800px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidenav { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <a class="brand" href="/"><span class="brand-dot"></span>VNCV<span style="color:var(--muted);">/</span>OCR</a>
+  <div class="header-spacer"></div>
+  <a class="nav-link" href="/">Scanner</a>
+  <a class="nav-link" href="/admin">Admin</a>
+  <a class="btn btn-lime" href="/docs" target="_blank">Swagger UI ↗</a>
+</header>
+
+<div class="layout">
+
+  <!-- SIDENAV -->
+  <nav class="sidenav fade-up">
+    <div class="sidenav-group">
+      <div class="sidenav-label">Tổng quan</div>
+      <a href="#intro" class="active">Giới thiệu</a>
+      <a href="#doctypes">DocType hợp lệ</a>
+      <a href="#base-url">Base URL</a>
+    </div>
+    <div class="sidenav-group">
+      <div class="sidenav-label">OCR API</div>
+      <a href="#scan"><span class="method method-post">POST</span>/ocr/v1/scan</a>
+    </div>
+    <div class="sidenav-group">
+      <div class="sidenav-label">DocType CRUD</div>
+      <a href="#dt-list"><span class="method method-get">GET</span>/api/doctypes</a>
+      <a href="#dt-add"><span class="method method-post">POST</span>/api/doctypes</a>
+      <a href="#dt-update"><span class="method method-patch">PATCH</span>/api/doctypes/{id}</a>
+      <a href="#dt-delete"><span class="method method-delete">DEL</span>/api/doctypes/{id}</a>
+    </div>
+    <div class="sidenav-group">
+      <div class="sidenav-label">Lịch sử</div>
+      <a href="#history"><span class="method method-get">GET</span>/api/history</a>
+    </div>
+    <div class="sidenav-group">
+      <div class="sidenav-label">WebSocket</div>
+      <a href="#ws"><span class="method method-ws">WS</span>/ws/scan</a>
+      <a href="#ws-flow">Luồng sự kiện</a>
+      <a href="#ws-try">Thử kết nối</a>
+    </div>
+  </nav>
+
+  <!-- CONTENT -->
+  <main class="content">
+
+    <!-- INTRO -->
+    <section class="section fade-up-2" id="intro">
+      <div class="section-title">📡 Hướng dẫn sử dụng API</div>
+      <div class="section-subtitle">VNCV OCR + VietNerm — nhận dạng văn bản và trích xuất thực thể từ ảnh giấy tờ Việt Nam</div>
+
+      <div class="info-box" style="margin-bottom:16px;">
+        <span class="info-icon">💡</span>
+        <div>API nhận ảnh giấy tờ (CCCD, Hộ chiếu, GPLX…), trả về <strong>raw text OCR</strong> và <strong>NER result</strong> đã được phân tích theo từng loại giấy tờ. Hỗ trợ real-time progress qua <strong>WebSocket</strong>.</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;">
+          <div style="font-family:var(--font-mono);font-size:22px;color:var(--lime);margin-bottom:4px;">OCR</div>
+          <div style="font-size:12px;color:var(--muted);">Trích xuất văn bản từ ảnh bằng ONNX engine</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;">
+          <div style="font-family:var(--font-mono);font-size:22px;color:var(--lime);margin-bottom:4px;">NER</div>
+          <div style="font-size:12px;color:var(--muted);">Nhận dạng thực thể theo doc_type bằng PhoBERT</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;">
+          <div style="font-family:var(--font-mono);font-size:22px;color:var(--lime);margin-bottom:4px;">WS</div>
+          <div style="font-size:12px;color:var(--muted);">Progress real-time qua WebSocket</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DOCTYPES -->
+    <section class="section" id="doctypes">
+      <div class="section-title" style="font-size:16px;">📋 DocType hợp lệ</div>
+      <div class="section-subtitle">Các giá trị <code style="font-family:var(--font-mono);font-size:12px;background:var(--surface2);padding:1px 6px;border-radius:4px;">doc_type</code> được VietNerm hỗ trợ và có model trên HuggingFace</div>
+      <div class="section-subtitle">Bạn có thể tham khảo các model tại  <code style="font-family:var(--font-mono);font-size:12px;background:var(--surface2);padding:1px 6px;border-radius:4px;"><a href="https://huggingface.co/ngocthanhdoan">https://huggingface.co/ngocthanhdoan</a></code></div>
+      <table class="dt-table">
+        <thead><tr><th>doc_type key</th><th>Tên loại giấy tờ</th><th>Model HuggingFace</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="dt-key">cccd</span></td>
+            <td>Căn cước công dân</td>
+            <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--muted);">ngocthanhdoan/phobert-cccd-ner</span></td>
+          </tr>
+          <tr>
+            <td><span class="dt-key">passport</span></td>
+            <td>Hộ chiếu</td>
+            <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--muted);">ngocthanhdoan/phobert-passport-ner</span></td>
+          </tr>
+          <tr>
+            <td><span class="dt-key">gplx</span></td>
+            <td>Giấy phép lái xe</td>
+            <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--muted);">ngocthanhdoan/phobert-gplx-ner</span></td>
+          </tr>
+          <tr>
+            <td><span class="dt-key">giay_khai_sinh</span></td>
+            <td>Giấy khai sinh</td>
+            <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--muted);">ngocthanhdoan/phobert-giay_khai_sinh-ner</span></td>
+          </tr>
+          <tr>
+            <td><span class="dt-key">vehicle_registration</span></td>
+            <td>Đăng ký xe</td>
+            <td><span style="font-family:var(--font-mono);font-size:11px;color:var(--muted);">ngocthanhdoan/phobert-vehicle_registration-ner</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- BASE URL -->
+    <section class="section" id="base-url">
+      <div class="section-title" style="font-size:16px;">🌐 Base URL</div>
+      <div class="section-subtitle">Địa chỉ gốc của API server</div>
+      <div class="code-wrap">
+        <span class="code-lang">http</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        <pre><span class="cmt"># Local development</span>
+<span class="val">http://localhost:8000</span>
+
+<span class="cmt"># WebSocket</span>
+<span class="val">ws://localhost:8000</span>
+
+<span class="cmt"># Production (thay bằng domain của bạn)</span>
+<span class="val">https://your-domain.com</span>
+<span class="val">wss://your-domain.com</span></pre>
+      </div>
+    </section>
+
+    <!-- ══ OCR SCAN ══ -->
+    <section class="section" id="scan">
+      <div class="section-title" style="font-size:16px;">⚡ OCR Scan</div>
+      <div class="section-subtitle">Nhận dạng văn bản và trích xuất thực thể từ ảnh giấy tờ</div>
+
+      <div class="endpoint open" id="ep-scan">
+        <div class="endpoint-header" onclick="toggleEndpoint('ep-scan')">
+          <span class="endpoint-method method-post">POST</span>
+          <span class="endpoint-path">/ocr/v1/scan</span>
+          <span class="endpoint-desc">Upload ảnh → OCR + NER</span>
+          <span class="chevron">▾</span>
+        </div>
+        <div class="endpoint-body">
+
+          <div>
+            <div class="params-title">Query Parameters</div>
+            <table class="params-table">
+              <thead><tr><th>Tên</th><th>Kiểu</th><th>Bắt buộc</th><th>Mô tả</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td class="param-name">doc_type</td>
+                  <td class="param-type">string</td>
+                  <td><span class="param-optional">optional</span></td>
+                  <td>
+                    <div class="param-desc">Loại giấy tờ cần nhận dạng</div>
+                    <div class="param-default">Mặc định: <code style="font-family:var(--font-mono);color:var(--lime);">cccd</code> · Xem bảng DocType ở trên</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div>
+            <div class="params-title">Body — multipart/form-data</div>
+            <table class="params-table">
+              <thead><tr><th>Tên</th><th>Kiểu</th><th>Bắt buộc</th><th>Mô tả</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td class="param-name">file</td>
+                  <td class="param-type">File</td>
+                  <td><span class="param-required">required</span></td>
+                  <td><div class="param-desc">Ảnh giấy tờ · JPG, PNG, PDF</div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- cURL -->
+          <div>
+            <div class="params-title">Ví dụ — cURL</div>
+            <div class="code-wrap">
+              <span class="code-lang">bash</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              <pre><span class="kw">curl</span> -X POST <span class="str">"http://localhost:8000/ocr/v1/scan?doc_type=cccd"</span> \
+  -F <span class="str">"file=@/path/to/cccd.jpg"</span></pre>
+            </div>
+          </div>
+
+          <!-- Python -->
+          <div>
+            <div class="params-title">Ví dụ — Python requests</div>
+            <div class="code-wrap">
+              <span class="code-lang">python</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              <pre><span class="kw">import</span> requests
+
+url  = <span class="str">"http://localhost:8000/ocr/v1/scan"</span>
+params = {<span class="str">"doc_type"</span>: <span class="str">"cccd"</span>}
+
+<span class="kw">with</span> open(<span class="str">"cccd.jpg"</span>, <span class="str">"rb"</span>) as f:
+    res = requests.post(url, params=params, files={<span class="str">"file"</span>: f})
+
+data = res.json()
+print(data[<span class="str">"raw_text"</span>])
+print(data[<span class="str">"ner_result"</span>])</pre>
+            </div>
+          </div>
+
+          <!-- JS fetch -->
+          <div>
+            <div class="params-title">Ví dụ — JavaScript fetch</div>
+            <div class="code-wrap">
+              <span class="code-lang">javascript</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              <pre><span class="kw">const</span> form = <span class="kw">new</span> FormData();
+form.append(<span class="str">"file"</span>, fileInput.files[<span class="num">0</span>]);
+
+<span class="kw">const</span> res = <span class="kw">await</span> fetch(
+  <span class="str">`/ocr/v1/scan?doc_type=cccd`</span>,
+  { method: <span class="str">"POST"</span>, body: form }
+);
+<span class="kw">const</span> data = <span class="kw">await</span> res.json();
+console.log(data.ner_result);</pre>
+            </div>
+          </div>
+
+          <!-- Response 200 -->
+          <div>
+            <div class="res-label"><span class="status-200">● 200 OK</span></div>
+            <div class="code-wrap">
+              <span class="code-lang">json</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              <pre>{
+  <span class="key">"success"</span>: <span class="val">true</span>,
+  <span class="key">"doc_type"</span>: <span class="str">"cccd"</span>,
+  <span class="key">"raw_text"</span>: <span class="str">"Họ và tên / Full name:\nNGUYỄN VĂN A\n..."</span>,
+  <span class="key">"ner_result"</span>: {
+    <span class="key">"full_name"</span>:          <span class="str">"Nguyễn Văn A"</span>,
+    <span class="key">"id_number"</span>:          <span class="str">"079304001234"</span>,
+    <span class="key">"date_of_birth"</span>:      <span class="str">"01/01/1990"</span>,
+    <span class="key">"gender"</span>:             <span class="str">"Nam"</span>,
+    <span class="key">"nationality"</span>:        <span class="str">"Việt Nam"</span>,
+    <span class="key">"place_of_origin"</span>:    <span class="str">"Hà Nội"</span>,
+    <span class="key">"place_of_residence"</span>: <span class="str">"Hoàn Kiếm, Hà Nội"</span>,
+    <span class="key">"date_of_expiry"</span>:     <span class="str">"01/01/2035"</span>
+  }
+}</pre>
+            </div>
+          </div>
+
+          <!-- Response 500 -->
+          <div>
+            <div class="res-label"><span class="status-500">● 500 Internal Server Error</span></div>
+            <div class="code-wrap">
+              <span class="code-lang">json</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              <pre>{ <span class="key">"detail"</span>: <span class="str">"error message..."</span> }</pre>
+            </div>
+          </div>
+
+          <div class="res-label"><span class="status-503">● 503</span> — OCR engine không khả dụng trên server</div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ DOCTYPE CRUD ══ -->
+    <section class="section" id="dt-list">
+      <div class="section-title" style="font-size:16px;">🗂 DocType API</div>
+      <div class="section-subtitle">CRUD quản lý danh sách loại giấy tờ lưu trong SQLite</div>
+
+      <!-- GET /api/doctypes -->
+      <div class="endpoint" id="ep-dt-list">
+        <div class="endpoint-header" onclick="toggleEndpoint('ep-dt-list')">
+          <span class="endpoint-method method-get">GET</span>
+          <span class="endpoint-path">/api/doctypes</span>
+          <span class="endpoint-desc">Lấy danh sách tất cả doctype</span>
+          <span class="chevron">▾</span>
+        </div>
+        <div class="endpoint-body">
+          <div>
+            <div class="params-title">Query Parameters</div>
+            <table class="params-table">
+              <thead><tr><th>Tên</th><th>Kiểu</th><th></th><th>Mô tả</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td class="param-name">enabled_only</td>
+                  <td class="param-type">boolean</td>
+                  <td><span class="param-optional">optional</span></td>
+                  <td><div class="param-desc">Chỉ trả về các doctype đang bật</div><div class="param-default">Mặc định: <code style="font-family:var(--font-mono);">false</code></div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="code-wrap">
+            <span class="code-lang">bash</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            <pre><span class="kw">curl</span> <span class="str">"http://localhost:8000/api/doctypes"</span>
+<span class="kw">curl</span> <span class="str">"http://localhost:8000/api/doctypes?enabled_only=true"</span></pre>
+          </div>
+          <div>
+            <div class="res-label"><span class="status-200">● 200 OK</span></div>
+            <div class="code-wrap">
+              <span class="code-lang">json</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              <pre>[
+  {
+    <span class="key">"id"</span>: <span class="num">1</span>,
+    <span class="key">"key"</span>: <span class="str">"cccd"</span>,
+    <span class="key">"label"</span>: <span class="str">"Căn cước công dân"</span>,
+    <span class="key">"aliases"</span>: <span class="str">"cccd,id_card"</span>,
+    <span class="key">"enabled"</span>: <span class="num">1</span>,
+    <span class="key">"created_at"</span>: <span class="str">"2024-01-01 00:00:00"</span>
+  },
+  ...
+]</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- POST /api/doctypes -->
+      <div class="endpoint" id="ep-dt-add" style="scroll-margin-top:80px;" id="dt-add">
+        <div class="endpoint-header" onclick="toggleEndpoint('ep-dt-add')">
+          <span class="endpoint-method method-post">POST</span>
+          <span class="endpoint-path">/api/doctypes</span>
+          <span class="endpoint-desc">Thêm doctype mới</span>
+          <span class="chevron">▾</span>
+        </div>
+        <div class="endpoint-body">
+          <div>
+            <div class="params-title">Request Body — application/json</div>
+            <table class="params-table">
+              <thead><tr><th>Field</th><th>Kiểu</th><th></th><th>Mô tả</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td class="param-name">key</td>
+                  <td class="param-type">string</td>
+                  <td><span class="param-required">required</span></td>
+                  <td><div class="param-desc">Mã định danh duy nhất, khớp với doc_type VietNerm</div></td>
+                </tr>
+                <tr>
+                  <td class="param-name">label</td>
+                  <td class="param-type">string</td>
+                  <td><span class="param-required">required</span></td>
+                  <td><div class="param-desc">Tên hiển thị trên giao diện</div></td>
+                </tr>
+                <tr>
+                  <td class="param-name">aliases</td>
+                  <td class="param-type">string</td>
+                  <td><span class="param-optional">optional</span></td>
+                  <td><div class="param-desc">Các tên khác, phân cách bằng dấu phẩy</div></td>
+                </tr>
+                <tr>
+                  <td class="param-name">enabled</td>
+                  <td class="param-type">boolean</td>
+                  <td><span class="param-optional">optional</span></td>
+                  <td><div class="param-desc">Bật/tắt hiển thị trên scanner</div><div class="param-default">Mặc định: <code style="font-family:var(--font-mono);">true</code></div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="code-wrap">
+            <span class="code-lang">bash</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            <pre><span class="kw">curl</span> -X POST <span class="str">"http://localhost:8000/api/doctypes"</span> \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{"key":"giay_khai_sinh","label":"Giấy khai sinh","aliases":"birth","enabled":true}'</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- PATCH -->
+      <div class="endpoint" id="ep-dt-update">
+        <div class="endpoint-header" onclick="toggleEndpoint('ep-dt-update')">
+          <span class="endpoint-method method-patch">PATCH</span>
+          <span class="endpoint-path">/api/doctypes/<span class="path-param">{id}</span></span>
+          <span class="endpoint-desc">Cập nhật doctype</span>
+          <span class="chevron">▾</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="info-box">
+            <span class="info-icon">ℹ</span>
+            <div>Tất cả field đều <strong>optional</strong> — chỉ gửi field cần thay đổi.</div>
+          </div>
+          <div class="code-wrap">
+            <span class="code-lang">bash</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            <pre><span class="kw">curl</span> -X PATCH <span class="str">"http://localhost:8000/api/doctypes/1"</span> \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{"enabled": false}'</span></pre>
+          </div>
+          <div>
+            <div class="res-label"><span class="status-200">● 200 OK</span></div>
+            <pre>{ <span class="key">"ok"</span>: <span class="val">true</span> }</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DELETE -->
+      <div class="endpoint" id="ep-dt-delete">
+        <div class="endpoint-header" onclick="toggleEndpoint('ep-dt-delete')">
+          <span class="endpoint-method method-delete">DEL</span>
+          <span class="endpoint-path">/api/doctypes/<span class="path-param">{id}</span></span>
+          <span class="endpoint-desc">Xóa doctype</span>
+          <span class="chevron">▾</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="warn-box">
+            <span class="info-icon">⚠</span>
+            <div style="color:var(--orange);">Hành động không thể hoàn tác. Lịch sử scan liên quan vẫn được giữ lại.</div>
+          </div>
+          <div class="code-wrap">
+            <span class="code-lang">bash</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            <pre><span class="kw">curl</span> -X DELETE <span class="str">"http://localhost:8000/api/doctypes/2"</span></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section class="section" id="history">
+      <div class="section-title" style="font-size:16px;">🕐 Lịch sử Scan</div>
+      <div class="section-subtitle">Truy vấn lịch sử các lần OCR đã thực hiện</div>
+
+      <div class="endpoint" id="ep-history">
+        <div class="endpoint-header" onclick="toggleEndpoint('ep-history')">
+          <span class="endpoint-method method-get">GET</span>
+          <span class="endpoint-path">/api/history</span>
+          <span class="endpoint-desc">Danh sách lịch sử scan gần nhất</span>
+          <span class="chevron">▾</span>
+        </div>
+        <div class="endpoint-body">
+          <div>
+            <div class="params-title">Query Parameters</div>
+            <table class="params-table">
+              <thead><tr><th>Tên</th><th>Kiểu</th><th></th><th>Mô tả</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td class="param-name">limit</td>
+                  <td class="param-type">integer</td>
+                  <td><span class="param-optional">optional</span></td>
+                  <td><div class="param-desc">Số lượng bản ghi trả về</div><div class="param-default">Mặc định: <code style="font-family:var(--font-mono);">20</code></div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="code-wrap">
+            <span class="code-lang">bash</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+            <pre><span class="kw">curl</span> <span class="str">"http://localhost:8000/api/history?limit=10"</span></pre>
+          </div>
+          <div>
+            <div class="res-label"><span class="status-200">● 200 OK</span></div>
+            <div class="code-wrap">
+              <span class="code-lang">json</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              <pre>[
+  {
+    <span class="key">"id"</span>: <span class="num">42</span>,
+    <span class="key">"doc_type"</span>: <span class="str">"cccd"</span>,
+    <span class="key">"filename"</span>: <span class="str">"cccd.jpg"</span>,
+    <span class="key">"raw_text"</span>: <span class="str">"..."</span>,
+    <span class="key">"ner_result"</span>: <span class="str">"{\"full_name\":\"Nguyễn Văn A\",...}"</span>,
+    <span class="key">"success"</span>: <span class="num">1</span>,
+    <span class="key">"created_at"</span>: <span class="str">"2024-06-15 10:30:00"</span>
+  }
+]</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WEBSOCKET -->
+    <section class="section" id="ws">
+      <div class="section-title" style="font-size:16px;">🔌 WebSocket</div>
+      <div class="section-subtitle">Nhận tiến trình scan real-time — kết nối trước khi gọi POST /ocr/v1/scan</div>
+
+      <div class="info-box" style="margin-bottom:20px;">
+        <span class="info-icon">💡</span>
+        <div>WebSocket broadcast tới <strong>tất cả client đang kết nối</strong> khi có scan xảy ra. Kết nối càng sớm càng tốt để không bỏ lỡ event.</div>
+      </div>
+
+      <div class="endpoint open" id="ep-ws">
+        <div class="endpoint-header" onclick="toggleEndpoint('ep-ws')">
+          <span class="endpoint-method method-ws">WS</span>
+          <span class="endpoint-path">ws://localhost:8000/ws/scan</span>
+          <span class="endpoint-desc">Real-time progress</span>
+          <span class="chevron">▾</span>
+        </div>
+        <div class="endpoint-body">
+
+          <!-- Connect examples -->
+          <div>
+            <div class="params-title">Kết nối — JavaScript</div>
+            <div class="code-wrap">
+              <span class="code-lang">javascript</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              <pre><span class="kw">const</span> ws = <span class="kw">new</span> WebSocket(<span class="str">"ws://localhost:8000/ws/scan"</span>);
+
+ws.onopen = () => {
+  console.log(<span class="str">"✓ WebSocket connected"</span>);
+  ws.send(JSON.stringify({ action: <span class="str">"ping"</span> }));
+};
+
+ws.onmessage = (event) => {
+  <span class="kw">const</span> msg = JSON.parse(event.data);
+
+  <span class="kw">switch</span> (msg.type) {
+    <span class="kw">case</span> <span class="str">"pong"</span>:
+      console.log(<span class="str">"Server alive"</span>);
+      <span class="kw">break</span>;
+    <span class="kw">case</span> <span class="str">"progress"</span>:
+      console.log(<span class="str">`Bước ${msg.step}: ${msg.msg}`</span>);
+      <span class="kw">break</span>;
+    <span class="kw">case</span> <span class="str">"done"</span>:
+      console.log(<span class="str">"Hoàn tất!"</span>, msg.ner_result);
+      <span class="kw">break</span>;
+    <span class="kw">case</span> <span class="str">"error"</span>:
+      console.error(<span class="str">"Lỗi:"</span>, msg.msg);
+      <span class="kw">break</span>;
+  }
+};
+
+ws.onclose = () => console.log(<span class="str">"Disconnected"</span>);
+ws.onerror = (err) => console.error(<span class="str">"WS Error"</span>, err);</pre>
+            </div>
+          </div>
+
+          <!-- Python websockets -->
+          <div>
+            <div class="params-title">Kết nối — Python (websockets)</div>
+            <div class="code-wrap">
+              <span class="code-lang">python</span>
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              <pre><span class="kw">import</span> asyncio, json, websockets
+
+<span class="kw">async def</span> listen():
+    uri = <span class="str">"ws://localhost:8000/ws/scan"</span>
+    <span class="kw">async with</span> websockets.connect(uri) <span class="kw">as</span> ws:
+        <span class="kw">await</span> ws.send(json.dumps({<span class="str">"action"</span>: <span class="str">"ping"</span>}))
+        <span class="kw">async for</span> message <span class="kw">in</span> ws:
+            msg = json.loads(message)
+            print(msg)
+
+asyncio.run(listen())</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WS FLOW -->
+    <section class="section" id="ws-flow">
+      <div class="section-title" style="font-size:16px;">📊 Luồng sự kiện WebSocket</div>
+      <div class="section-subtitle">Thứ tự các message được gửi trong một lần scan</div>
+
+      <div class="ws-flow">
+        <div class="ws-msg">
+          <span class="ws-dir c2s">CLIENT</span>
+          <div class="ws-msg-body">
+            <div class="ws-type">ping</div>
+            <div class="ws-payload">{"action": "ping"}</div>
+          </div>
+        </div>
+        <div style="text-align:center;color:var(--muted);font-size:18px;">↕</div>
+        <div class="ws-msg">
+          <span class="ws-dir s2c">SERVER</span>
+          <div class="ws-msg-body">
+            <div class="ws-type">pong</div>
+            <div class="ws-payload">{"type": "pong"}</div>
+          </div>
+        </div>
+        <div style="color:var(--muted);font-size:12px;padding-left:12px;font-family:var(--font-mono);">── Client gọi POST /ocr/v1/scan ──</div>
+        <div class="ws-msg">
+          <span class="ws-dir s2c">SERVER</span>
+          <div class="ws-msg-body">
+            <div class="ws-type" style="color:var(--blue);">progress · bước 1</div>
+            <div class="ws-payload">{"type": "progress", "step": 1, "msg": "Đang trích xuất văn bản…"}</div>
+          </div>
+        </div>
+        <div class="ws-msg">
+          <span class="ws-dir s2c">SERVER</span>
+          <div class="ws-msg-body">
+            <div class="ws-type" style="color:var(--orange);">progress · bước 2</div>
+            <div class="ws-payload">{"type": "progress", "step": 2, "msg": "Đang nhận dạng thực thể (NER)…"}</div>
+          </div>
+        </div>
+        <div class="ws-msg" style="border-color:rgba(163,230,53,.3);background:var(--lime-soft);">
+          <span class="ws-dir s2c">SERVER</span>
+          <div class="ws-msg-body">
+            <div class="ws-type" style="color:var(--lime);">done · bước 3</div>
+            <div class="ws-payload">{"type": "done", "step": 3, "msg": "Hoàn tất!", "doc_type": "cccd", "raw_text": "...", "ner_result": {...}}</div>
+          </div>
+        </div>
+        <div style="color:var(--muted);font-size:12px;padding-left:12px;font-family:var(--font-mono);">── Nếu có lỗi ──</div>
+        <div class="ws-msg" style="border-color:rgba(248,113,113,.3);">
+          <span class="ws-dir s2c">SERVER</span>
+          <div class="ws-msg-body">
+            <div class="ws-type" style="color:var(--danger);">error</div>
+            <div class="ws-payload">{"type": "error", "msg": "error detail..."}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WS TRY IT -->
+    <section class="section" id="ws-try">
+      <div class="section-title" style="font-size:16px;">🧪 Thử kết nối WebSocket</div>
+      <div class="section-subtitle">Kiểm tra WebSocket trực tiếp ngay tại trang này</div>
+
+      <div class="try-it">
+        <div class="try-title">WebSocket Console</div>
+        <div class="try-row" style="margin-bottom:10px;">
+          <input class="try-input" id="wsUrl" value="ws://localhost:8000/ws/scan" style="font-size:12px;"/>
+          <button class="btn btn-lime" id="wsConnBtn" onclick="wsConnect()">Kết nối</button>
+          <button class="btn btn-ghost" id="wsDiscBtn" onclick="wsDisconnect()" disabled>Ngắt</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <input class="try-input" id="wsMsg" placeholder='{"action":"ping"}' style="flex:1;font-size:12px;" onkeydown="if(event.key==='Enter')wsSend()"/>
+          <button class="btn btn-ghost" onclick="wsSend()">Gửi</button>
+        </div>
+        <div class="try-output visible" id="wsOutput" style="height:200px;"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <span>VNCV OCR · API Guide</span>
+  <span style="flex:1;"></span>
+  <a href="/">Scanner</a>
+  <a href="/admin">Admin</a>
+  <a href="/docs" target="_blank">Swagger UI</a>
+</footer>
+
+<script>
+/* ── Endpoint toggle ─────────────────────────────────────────────────────── */
+function toggleEndpoint(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+
+/* ── Copy code ───────────────────────────────────────────────────────────── */
+function copyCode(btn) {
+  const pre = btn.closest('.code-wrap').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = '✓';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+
+/* ── Sidenav active on scroll ────────────────────────────────────────────── */
+const sections = document.querySelectorAll('.section[id]');
+const navLinks = document.querySelectorAll('.sidenav a[href^="#"]');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navLinks.forEach(a => a.classList.remove('active'));
+      const link = document.querySelector(`.sidenav a[href="#${e.target.id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+sections.forEach(s => observer.observe(s));
+
+/* ── WS Console ──────────────────────────────────────────────────────────── */
+let wsConn = null;
+const out = document.getElementById('wsOutput');
+
+function wsLog(msg, color = '') {
+  const ts = new Date().toLocaleTimeString('vi-VN');
+  const line = document.createElement('div');
+  line.style.color = color || 'var(--text)';
+  line.style.borderBottom = '1px solid rgba(255,255,255,.04)';
+  line.style.paddingBottom = '4px';
+  line.style.marginBottom = '4px';
+  line.textContent = `[${ts}] ${msg}`;
+  out.appendChild(line);
+  out.scrollTop = out.scrollHeight;
+}
+
+function wsConnect() {
+  const url = document.getElementById('wsUrl').value.trim();
+  if (wsConn) wsConn.close();
+  wsLog(`Đang kết nối tới ${url}…`, 'var(--muted)');
+  wsConn = new WebSocket(url);
+  wsConn.onopen = () => {
+    wsLog('✓ Đã kết nối', 'var(--lime)');
+    document.getElementById('wsConnBtn').disabled = true;
+    document.getElementById('wsDiscBtn').disabled = false;
+  };
+  wsConn.onmessage = (e) => {
+    try {
+      const msg = JSON.parse(e.data);
+      wsLog('← ' + JSON.stringify(msg, null, 0), 'var(--blue)');
+    } catch {
+      wsLog('← ' + e.data, 'var(--blue)');
+    }
+  };
+  wsConn.onclose = () => {
+    wsLog('✗ Đã ngắt kết nối', 'var(--danger)');
+    document.getElementById('wsConnBtn').disabled = false;
+    document.getElementById('wsDiscBtn').disabled = true;
+    wsConn = null;
+  };
+  wsConn.onerror = () => wsLog('⚠ Lỗi kết nối', 'var(--danger)');
+}
+
+function wsDisconnect() {
+  if (wsConn) wsConn.close();
+}
+
+function wsSend() {
+  const txt = document.getElementById('wsMsg').value.trim();
+  if (!wsConn || wsConn.readyState !== WebSocket.OPEN) {
+    wsLog('⚠ Chưa kết nối!', 'var(--danger)'); return;
+  }
+  wsConn.send(txt);
+  wsLog('→ ' + txt, 'var(--lime)');
+}
+
+wsLog('Nhấn "Kết nối" để bắt đầu…', 'var(--muted)');
+</script>
+</body>
+</html>

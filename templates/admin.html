@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VNCV · Quản lý Hệ thống</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:        #09090b;
+  --surface:   #111113;
+  --surface2:  #18181b;
+  --surface3:  #232326;
+  --border:    #2a2a2f;
+  --lime:      #a3e635;
+  --lime-dim:  #6ea818;
+  --lime-glow: rgba(163,230,53,.18);
+  --text:      #e4e4e7;
+  --muted:     #71717a;
+  --danger:    #f87171;
+  --radius:    10px;
+  --font-mono: 'Space Mono', monospace;
+  --font-body: 'DM Sans', sans-serif;
+}
+body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--font-body); font-size: 15px;
+  line-height: 1.6; min-height: 100vh;
+  display: flex; flex-direction: column;
+}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+header {
+  position: sticky; top: 0; z-index: 100;
+  height: 56px; background: rgba(9,9,11,.82);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 24px; gap: 16px;
+}
+.brand {
+  font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+  letter-spacing: .06em; color: var(--lime); text-decoration: none;
+  display: flex; align-items: center; gap: 8px;
+}
+.brand-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--lime); box-shadow: 0 0 8px var(--lime);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:.5;transform:scale(.8);} }
+.header-spacer { flex: 1; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 16px; border-radius: var(--radius);
+  font-family: var(--font-body); font-size: 13px; font-weight: 500;
+  cursor: pointer; border: none; transition: all .2s; text-decoration: none;
+}
+.btn-lime { background: var(--lime); color: #09090b; }
+.btn-lime:hover { background: #b7f542; box-shadow: 0 0 16px var(--lime-glow); }
+.btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+.btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+.btn-danger { background: transparent; color: var(--danger); border: 1px solid rgba(248,113,113,.3); font-size:12px; padding:5px 10px; }
+.btn-danger:hover { background: rgba(248,113,113,.08); }
+.btn-sm { padding:5px 12px; font-size:12px; }
+
+main {
+  flex:1; max-width: 1000px; width:100%;
+  margin: 0 auto; padding: 32px 24px;
+  display: flex; flex-direction: column; gap: 32px;
+}
+
+.page-title {
+  font-family: var(--font-mono); font-size: 22px; font-weight: 700;
+  color: var(--text); margin-bottom: 4px;
+}
+.page-sub { font-size: 13px; color: var(--muted); }
+
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+}
+.card-header {
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-title {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+}
+
+/* Table */
+table { width: 100%; border-collapse: collapse; }
+thead tr { border-bottom: 1px solid var(--border); }
+th {
+  padding: 12px 16px; text-align: left;
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--muted); font-weight: 700;
+}
+td { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,.03); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,.01); }
+.key-badge {
+  font-family: var(--font-mono); font-size: 11px;
+  background: var(--surface3); color: var(--text);
+  padding: 3px 8px; border-radius: 5px;
+  border: 1px solid var(--border);
+}
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  display: inline-block; margin-right: 6px;
+}
+.status-dot.on { background: var(--lime); box-shadow: 0 0 6px var(--lime); }
+.status-dot.off { background: var(--muted); }
+.status-dot.update { background: #fbbf24; box-shadow: 0 0 6px #fbbf24; }
+
+/* Toast */
+#toast {
+  position: fixed; bottom: 24px; right: 24px;
+  padding: 12px 20px; border-radius: 10px;
+  font-size: 13px; font-weight: 500;
+  box-shadow: 0 8px 30px rgba(0,0,0,.5);
+  transform: translateY(20px); opacity: 0;
+  transition: all .3s; pointer-events: none; z-index: 999;
+}
+#toast.show { transform: translateY(0); opacity: 1; }
+#toast.success { background: var(--lime); color: #09090b; }
+#toast.error   { background: var(--danger); color: #fff; }
+#toast.info    { background: var(--surface3); color: var(--text); border: 1px solid var(--border); }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+.fade-up { animation: fadeUp .3s ease both; }
+
+.update-badge {
+    font-size: 10px;
+    background: #fbbf24;
+    color: #000;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    margin-left: 8px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="brand" href="/">
+    <span class="brand-dot"></span>
+    VNCV<span style="color:var(--muted);">/</span>OCR
+  </a>
+  <div class="header-spacer"></div>
+  <a class="btn btn-ghost" href="/">← Về Scanner</a>
+</header>
+
+<main>
+  <div class="fade-up">
+    <div class="page-title">⚙ Quản lý Hệ thống</div>
+    <div class="page-sub">Quản lý DocType và Model Hugging Face</div>
+  </div>
+
+  <!-- Model Management Section -->
+  <div class="card fade-up">
+    <div class="card-header">
+      <span class="card-title">Quản lý Model Hugging Face</span>
+      <button class="btn btn-ghost btn-sm" onclick="loadModels()">🔄 Làm mới</button>
+    </div>
+    <table id="modelTable">
+      <thead>
+        <tr>
+          <th>Loại giấy tờ</th>
+          <th>Repo ID</th>
+          <th>Trạng thái Local</th>
+          <th>Phiên bản HF</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody id="modelTableBody">
+        <!-- Will be populated by JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- DocType Section -->
+  <div class="card fade-up">
+    <div class="card-header">
+      <span class="card-title">Danh sách DocType</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Tên</th>
+          <th>Trạng thái</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for dt in doctypes %}
+        <tr>
+          <td><span class="key-badge">{{ dt.key }}</span></td>
+          <td style="font-weight:500;">{{ dt.label }}</td>
+          <td>
+            <span class="status-dot {{ 'on' if dt.enabled else 'off' }}"></span>
+            {{ 'Bật' if dt.enabled else 'Tắt' }}
+          </td>
+          <td>
+             <button class="btn btn-danger btn-sm" onclick="deleteDoctype({{ dt.id }})">🗑 Xóa</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+function showToast(msg, type='info') {
+  const t = document.getElementById('toast');
+  t.innerText = msg;
+  t.className = 'show ' + type;
+  setTimeout(() => t.className = '', 3000);
+}
+
+async function loadModels() {
+    try {
+        const res = await fetch('/api/models');
+        const models = await res.json();
+        const tbody = document.getElementById('modelTableBody');
+        tbody.innerHTML = '';
+        
+        models.forEach(m => {
+            const tr = document.createElement('tr');
+            const localStatus = m.local ? `<span class="status-dot on"></span> Đã tải (${m.local.commit_hash.substring(0,7)})` : `<span class="status-dot off"></span> Chưa tải`;
+            const remoteStatus = m.remote ? m.remote.commit_hash.substring(0,7) : 'N/A';
+            const updateBtn = m.update_available ? 
+                `<button class="btn btn-lime btn-sm" onclick="updateModel('${m.key}')">📥 ${m.local ? 'Cập nhật' : 'Tải model'}</button>` : 
+                `<button class="btn btn-ghost btn-sm" disabled>Đã mới nhất</button>`;
+            const deleteBtn = m.local ? `<button class="btn btn-danger btn-sm" onclick="deleteModel('${m.key}')">🗑 Xóa cache</button>` : '';
+            
+            tr.innerHTML = `
+                <td><b>${m.label}</b> ${m.update_available ? '<span class="update-badge">CÓ CẬP NHẬT</span>' : ''}</td>
+                <td><code style="font-size:12px;color:var(--muted)">${m.repo_id}</code></td>
+                <td>${localStatus}</td>
+                <td><code style="font-size:12px">${remoteStatus}</code></td>
+                <td>
+                    <div style="display:flex;gap:8px;">
+                        ${updateBtn}
+                        ${deleteBtn}
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (e) {
+        showToast('Lỗi tải danh sách model', 'error');
+    }
+}
+
+async function updateModel(key) {
+    showToast(`Đang tải model ${key}...`, 'info');
+    try {
+        const res = await fetch(`/api/models/${key}/update`, { method: 'POST' });
+        if (res.ok) {
+            showToast(`Đã cập nhật model ${key}`, 'success');
+            loadModels();
+        } else {
+            showToast('Lỗi khi cập nhật model', 'error');
+        }
+    } catch (e) {
+        showToast('Lỗi kết nối server', 'error');
+    }
+}
+
+async function deleteModel(key) {
+    if (!confirm(`Bạn có chắc muốn xóa cache của model ${key}?`)) return;
+    try {
+        const res = await fetch(`/api/models/${key}`, { method: 'DELETE' });
+        if (res.ok) {
+            showToast(`Đã xóa cache model ${key}`, 'success');
+            loadModels();
+        }
+    } catch (e) {
+        showToast('Lỗi khi xóa model', 'error');
+    }
+}
+
+async function deleteDoctype(id) {
+    if (!confirm('Xóa loại giấy tờ này?')) return;
+    try {
+        const res = await fetch(`/api/doctypes/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            location.reload();
+        }
+    } catch (e) {
+        showToast('Lỗi khi xóa', 'error');
+    }
+}
+
+// Initial load
+loadModels();
+</script>
+
+</body>
+</html>

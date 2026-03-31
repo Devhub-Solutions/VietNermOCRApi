@@ -1,87 +1,63 @@
-# VietNerm OCR API (FastAPI + Socket.IO + Frontend Demo)
+# VNCV OCR + VietNerm — Web UI
 
-Dự án mẫu để chạy pipeline **OCR → DocType Detection → NER** theo thời gian thực.
+Giao diện web cho OCR Scanner với WebSocket, SQLite DocType, và dark neon-lime UI.
 
-## Kiến trúc
+## Cấu trúc thư mục
 
-- Backend: FastAPI + python-socketio
-- Frontend: static HTML + Socket.IO client
-- Pipeline: `OCRService` → `DocTypeService` → `NERService`
-- Input hỗ trợ: multipart file, JSON base64, JSON image URL
-
-## Cấu trúc
-
-```text
-backend/
-  app/
-    api/routes_ocr.py
-    main.py
-    models/response_model.py
-    services/
-      ocr_service.py
-      doctype_service.py
-      ner_service.py
-      pipeline_service.py
-    socket/socket_manager.py
-    utils/image_loader.py
-  Dockerfile
-  requirements.txt
-frontend/
-  Dockerfile
-  index.html
-docker-compose.yml
+```
+.
+├── app.py              # FastAPI app (REST + WebSocket)
+├── database.py         # SQLite helpers
+├── ocr_app.db          # SQLite file (tự tạo khi chạy)
+├── templates/
+│   ├── index.html      # Giao diện Scanner chính
+│   └── admin.html      # Quản lý DocType
+└── static/             # (tùy chọn) static assets
 ```
 
-## Chạy bằng Docker
+## Cài đặt
 
 ```bash
-docker compose up --build
+pip install fastapi uvicorn jinja2 python-multipart vncv vietnerm
 ```
 
-- Backend API: `http://localhost:8000`
-- Frontend demo: `http://localhost:5500`
-
-## Chạy local không Docker
+## Chạy
 
 ```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+python app.py
+# hoặc
+uvicorn app:app --host 0.0.0.0 --port 8000 --reload
 ```
+
+Mở trình duyệt tại: http://localhost:8000
+
+## Tính năng
+
+| Tính năng | Mô tả |
+|---|---|
+| **Scan Mode** | Upload ảnh, chọn DocType → OCR + NER |
+| **History Mode** | Xem lại lịch sử các lần scan |
+| **WebSocket** | Hiển thị tiến trình real-time (bước 1, 2, 3) |
+| **SQLite DocType** | CRUD loại giấy tờ qua `/admin` |
+| **REST API** | `/ocr/v1/scan`, `/api/doctypes`, `/api/history` |
+| **API Docs** | Tự động tại `/docs` (Swagger) |
+
+## API Endpoints
+
+```
+GET  /                         → Scanner UI
+GET  /admin                    → Quản lý DocType
+WS   /ws/scan                  → WebSocket tiến trình
+POST /ocr/v1/scan?doc_type=... → OCR + NER
+GET  /api/doctypes             → Danh sách doctype
+POST /api/doctypes             → Thêm doctype
+PATCH /api/doctypes/{id}       → Sửa doctype
+DELETE /api/doctypes/{id}      → Xóa doctype
+GET  /api/history              → Lịch sử scan
+```
+
+## Biến môi trường
 
 ```bash
-cd frontend
-python -m http.server 5500
+DB_PATH=ocr_app.db   # Đường dẫn SQLite (mặc định: ocr_app.db)
 ```
-
-## API
-
-- `GET /health`
-- `POST /api/ocr` (multipart: `file`)
-- `POST /api/ocr/stream` (multipart: `file`, `session_id`)
-- `POST /api/ocr/json` (json: `image_base64` hoặc `image_url`, optional `session_id`)
-
-### Ví dụ JSON base64
-
-```json
-{
-  "image_base64": "data:image/png;base64,iVBORw0KGgo...",
-  "session_id": "socket-id"
-}
-```
-
-### Ví dụ JSON image URL
-
-```json
-{
-  "image_url": "https://example.com/document.jpg",
-  "session_id": "socket-id"
-}
-```
-
-## Ghi chú tích hợp thật
-
-Nếu đã cài `vncv` và `vietnerm`, service sẽ tự dùng model thật.
-Nếu chưa có, code fallback để giúp bạn test end-to-end luồng API và Socket.IO.
