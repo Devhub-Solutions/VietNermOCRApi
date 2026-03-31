@@ -5,6 +5,7 @@ python-multipart
 pydantic
 huggingface_hub
 requests
+httpx
 vncv
 vietnerm
 opencv-python-headless
