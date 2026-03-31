@@ -94,24 +94,32 @@ class DoctypeUpdate(BaseModel):
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     doctypes = get_enabled_doctypes()
-    return templates.TemplateResponse("index.html", {
-        "request": request,
-        "doctypes": doctypes,
-        "ocr_available": OCR_AVAILABLE,
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={
+            "doctypes": doctypes,
+            "ocr_available": OCR_AVAILABLE,
+        },
+    )
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin(request: Request):
     doctypes = get_all_doctypes()
-    return templates.TemplateResponse("admin.html", {
-        "request": request,
-        "doctypes": doctypes,
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="admin.html",
+        context={
+            "doctypes": doctypes,
+        },
+    )
 @app.get("/guide", response_class=HTMLResponse)
 async def guide(request: Request):
-    return templates.TemplateResponse("guide.html", {
-        "request": request,
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="guide.html",
+        context={},
+    )
 # ══════════════════════════════════════════════════════════════════════════════
 # WEBSOCKET
 # ══════════════════════════════════════════════════════════════════════════════
